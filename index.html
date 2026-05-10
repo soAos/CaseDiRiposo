@@ -86,3 +86,211 @@
       border-radius: 15px;
       padding: 15px;
       margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .medicine h3 {
+      color: #0f172a;
+      margin-bottom: 5px;
+    }
+
+    .green {
+      color: #15803d;
+      font-weight: bold;
+    }
+
+    .red {
+      color: #dc2626;
+      font-weight: bold;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-minus {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-plus {
+      background: #22c55e;
+      color: white;
+    }
+
+    .btn-delete {
+      background: #0f172a;
+      color: white;
+    }
+
+    @media(max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="card">
+      <h1>Gestione Farmaci - Casa di Riposo</h1>
+      <p>Controllo automatico delle scorte con notifiche per il riordino.</p>
+    </div>
+
+    <div id="warningBox"></div>
+
+    <div class="grid">
+
+      <div class="card">
+        <h2>Aggiungi Farmaco</h2>
+
+        <input type="text" id="medicineName" placeholder="Nome farmaco">
+        <input type="number" id="medicineQuantity" placeholder="Quantità">
+
+        <button class="btn-primary" onclick="addMedicine()">
+          Aggiungi Farmaco
+        </button>
+      </div>
+
+      <div class="card">
+        <h2>Magazzino Farmaci</h2>
+
+        <div id="medicineList"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    let medicines = JSON.parse(localStorage.getItem('medicines')) || [
+      { id: 1, name: 'Oki', quantity: 15 },
+      { id: 2, name: 'Tachipirina', quantity: 8 }
+    ];
+
+    function saveMedicines() {
+      localStorage.setItem('medicines', JSON.stringify(medicines));
+    }
+
+    async function showNotification(title, body) {
+      if (!('Notification' in window)) return;
+
+      if (Notification.permission === 'granted') {
+        new Notification(title, { body });
+      } else if (Notification.permission !== 'denied') {
+        const permission = await Notification.requestPermission();
+
+        if (permission === 'granted') {
+          new Notification(title, { body });
+        }
+      }
+    }
+
+    function renderMedicines() {
+      const list = document.getElementById('medicineList');
+      const warningBox = document.getElementById('warningBox');
+
+      list.innerHTML = '';
+
+      const lowStock = medicines.filter(m => m.quantity <= 10);
+
+      if (lowStock.length > 0) {
+        warningBox.innerHTML = `
+          <div class="card warning">
+            <h2>⚠️ Farmaci da Ordinare</h2>
+            ${lowStock.map(m => `
+              <p>${m.name} → ${m.quantity} pezzi rimasti</p>
+            `).join('')}
+          </div>
+        `;
+      } else {
+        warningBox.innerHTML = '';
+      }
+
+      medicines.forEach(medicine => {
+
+        if (medicine.quantity <= 10) {
+          showNotification(
+            `Scorte basse: ${medicine.name}`,
+            `Restano solo ${medicine.quantity} pezzi disponibili.`
+          );
+        }
+
+        const div = document.createElement('div');
+        div.className = 'medicine';
+
+        div.innerHTML = `
+          <div>
+            <h3>${medicine.name}</h3>
+            <p class="${medicine.quantity <= 10 ? 'red' : 'green'}">
+              ${medicine.quantity} pezzi disponibili
+            </p>
+          </div>
+
+          <div class="actions">
+            <button class="btn-minus" onclick="changeQuantity(${medicine.id}, -1)">-</button>
+            <button class="btn-plus" onclick="changeQuantity(${medicine.id}, 1)">+</button>
+            <button class="btn-delete" onclick="deleteMedicine(${medicine.id})">
+              Elimina
+            </button>
+          </div>
+        `;
+
+        list.appendChild(div);
+      });
+
+      saveMedicines();
+    }
+
+    function addMedicine() {
+      const name = document.getElementById('medicineName').value;
+      const quantity = parseInt(document.getElementById('medicineQuantity').value);
+
+      if (!name || !quantity) {
+        alert('Compila tutti i campi');
+        return;
+      }
+
+      medicines.push({
+        id: Date.now(),
+        name,
+        quantity
+      });
+
+      document.getElementById('medicineName').value = '';
+      document.getElementById('medicineQuantity').value = '';
+
+      renderMedicines();
+    }
+
+    function changeQuantity(id, value) {
+      medicines = medicines.map(medicine => {
+        if (medicine.id === id) {
+          medicine.quantity += value;
+
+          if (medicine.quantity < 0) {
+            medicine.quantity = 0;
+          }
+        }
+
+        return medicine;
+      });
+
+      renderMedicines();
+    }
+
+    function deleteMedicine(id) {
+      medicines = medicines.filter(medicine => medicine.id !== id);
+      renderMedicines();
+    }
+
+    renderMedicines();
+  </script>
+
+</body>
+</html>
