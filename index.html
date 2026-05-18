@@ -151,6 +151,7 @@
 
         <input type="text" id="medicineName" placeholder="Nome farmaco">
         <input type="number" id="medicineQuantity" placeholder="Quantità">
+        <input type="number" id="medicineBarcode" placeholder="Codice farmaco">
 
         <button class="btn-primary" onclick="addMedicine()">
           Aggiungi Farmaco
@@ -250,8 +251,9 @@
     function addMedicine() {
       const name = document.getElementById('medicineName').value;
       const quantity = parseInt(document.getElementById('medicineQuantity').value);
-
-      if (!name || !quantity) {
+      const barcode = parseInt(document.getElementById('medicineBarcode').value);
+      
+      if (!name || !quantity || !barcode) {
         alert('Compila tutti i campi');
         return;
       }
@@ -259,11 +261,14 @@
       medicines.push({
         id: Date.now(),
         name,
-        quantity
+        quantity,
+        barcode
       });
 
       document.getElementById('medicineName').value = '';
       document.getElementById('medicineQuantity').value = '';
+      document.getElementById('medicineBarcode').value = '';
+      
 
       renderMedicines();
     }
