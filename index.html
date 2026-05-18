@@ -187,8 +187,8 @@ document.addEventListener("keydown", function(event) {
 });
     
     let medicines = JSON.parse(localStorage.getItem('medicines')) || [
-      { id: 1, name: 'Oki', quantity: 15 },
-      { id: 2, name: 'Tachipirina', quantity: 8 }
+      { id: 1, name: 'Oki', quantity: 15 , barcode: '8051766865206'},
+      { id: 2, name: 'Tachipirina', quantity: 8, barcode: '9658' }
     ];
 
     function saveMedicines() {
